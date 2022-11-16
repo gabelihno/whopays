@@ -64,23 +64,11 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    public String getSpieler1(){
-        SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
-        String spieler1 = sharedPreferences.getString("spieler1", null);
-        return spieler1;
-    }
-
     public void saveSpieler2(String name){
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("spieler2", name);
         editor.apply();
-    }
-
-    public String getSpieler2(){
-        SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
-        String spieler1 = sharedPreferences.getString("spieler2", null);
-        return spieler1;
     }
 
     public void saveInt(int anz){
