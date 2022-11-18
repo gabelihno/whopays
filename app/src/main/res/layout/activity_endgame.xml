@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     tools:context=".EndgameActivity">
 
     <ImageView
@@ -23,6 +24,7 @@
         android:layout_height="36dp"
         android:text="gabi: 8 Punkte"
         android:textAlignment="center"
+        android:textColor="#F6F5F5"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,6 +38,7 @@
         android:layout_height="36dp"
         android:text="gabi: 8 Punkte"
         android:textAlignment="center"
+        android:textColor="#F8F8F8"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,6 +52,7 @@
         android:layout_height="58dp"
         android:text="Gabi hat das Spiel gewonnen!"
         android:textAlignment="center"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -63,6 +67,7 @@
         android:layout_height="61dp"
         android:text="Gabi hat das Spiel gewonnen!"
         android:textAlignment="center"
+        android:textColor="#F4F4F4"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

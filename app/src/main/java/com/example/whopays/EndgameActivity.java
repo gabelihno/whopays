@@ -35,7 +35,7 @@ public class EndgameActivity extends AppCompatActivity {
         player2.setText(""+ getSpieler2()+": "+getPlayer2Points());
 
         if(getPlayer1Points() > getPlayer2Points()){
-            winner.setText(getSpieler1()+" hat gewonnen mit "+getPlayer1Points()+" Punkte!");
+            winner.setText(getSpieler1()+" hat gewonnen mit "+getPlayer1Points()+" Punkten!");
             whopays.setText(getSpieler2()+" muss zahlen!");
 
         }
