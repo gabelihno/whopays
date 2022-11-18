@@ -2,6 +2,7 @@ package com.example.whopays;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,16 +12,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
-public class SettingsActivity extends AppCompatActivity  {
+public class SettingsActivity extends AppCompatActivity {
+
+    public static final int SEC_FOR_NEXT_ROLL = 3;
+    private boolean isShaking = false;
 
     private TextView inputPlayer1;
     private TextView inputPlayer2;
@@ -37,7 +38,7 @@ public class SettingsActivity extends AppCompatActivity  {
     private boolean isplayer1 = true;
     int delayTime = 20;
     int rollAnimations = 40;
-    int[] diceImages = new int[]{R.drawable.d1, R.drawable.d2, R.drawable.d3, R.drawable.d4, R.drawable.d5,R.drawable.d6};
+    int[] diceImages = new int[]{R.drawable.d1, R.drawable.d2, R.drawable.d3, R.drawable.d4, R.drawable.d5, R.drawable.d6};
     Random random = new Random();
     ImageView dice;
     MediaPlayer mp;
@@ -63,28 +64,6 @@ public class SettingsActivity extends AppCompatActivity  {
         currentPlayer.setText(getSpieler1());
         anzWuerfelint = getInt();
 
-//        realiseBtn.setOnClickListener(new View.OnClickListener() {
-//            int finalDiceInt = -1;
-//            int finalDiceText = 0;
-//            @Override
-//            public void onClick(View view) {
-//                try {
-//                    // In a try block call rollDice() method to show the
-//                    // dice roll animation. We'll define this method below.
-//                    finalDiceInt = rollDiceBeta();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                if(finalDiceInt > -1){
-//                    finalDiceText = finalDiceInt+1;
-//                    anzWuerfel.setText(""+ finalDiceText);
-//                    System.out.println(finalDiceInt);
-//                    dice.setImageResource(diceImages[finalDiceInt]);
-//                    System.out.println(finalDiceInt);
-//                }
-//
-//            }
-//        });
         // ShakeDetector initialization
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager
@@ -105,32 +84,42 @@ public class SettingsActivity extends AppCompatActivity  {
 
         Sensor sensorShake = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         SensorEventListener sensorEventListener = new SensorEventListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                int finalDiceInt = -1;
-                int finalDiceText = 0;
-                    if(sensorEvent !=null){
-                        float x_accl = sensorEvent.values[0];
-                        float y_accl = sensorEvent.values[1];
-                        float z_accl = sensorEvent.values[2];
+                if (sensorEvent != null) {
+                    float x_accl = sensorEvent.values[0];
+                    float y_accl = sensorEvent.values[1];
+                    float z_accl = sensorEvent.values[2];
 
-                        float floatSum = Math.abs(x_accl) + Math.abs(y_accl) + Math.abs(z_accl);
+                    float floatSum = Math.abs(x_accl) + Math.abs(y_accl) + Math.abs(z_accl);
 
-                        if (floatSum > 14){
-                            isshaking.setText("Yes, Shaking");
+                    if (floatSum > 14 && !isShaking) {
+                        isShaking = true;
+                        isshaking.setText("Yes, Shaking");
+                        try {
+                            handleShakeEvent();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        new Thread(() -> {
                             try {
-                                // In a try block call rollDice() method to show the
-                                // dice roll animation. We'll define this method below.
-                                handleShakeEvent();
-                            } catch (Exception e) {
+                                TimeUnit.SECONDS.sleep(SEC_FOR_NEXT_ROLL);
+                                isShaking = false;
+                            } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                        }).start();
+                        if (mp != null) {
+                            mp.start();
                         }
-                    else {
-                            isshaking.setText("No, NOT Shaking");
-                        }
+                    } else {
+                        isshaking.setText("No, NOT Shaking");
                     }
+                }
             }
+
             @Override
             public void onAccuracyChanged(Sensor sensor, int i) {
 
@@ -144,157 +133,60 @@ public class SettingsActivity extends AppCompatActivity  {
         System.out.println(anzWuerfelint);
         counter++;
 
-        if (mp != null) {
-            mp.start();
+        Random rand = new Random();
+        int randomNum = rand.nextInt((6 - 1) + 1) + 1;
+        anzWuerfel.setText("" + randomNum);
+        dice.setImageResource(diceImages[randomNum - 1]);
+
+        if (isplayer1) {
+            int inputValue = Integer.parseInt(player1pts.getText().toString());
+            int calcPoints = inputValue + randomNum;
+            player1pts.setText("" + calcPoints);
+            isplayer1 = false;
+            currentPlayer.setText(getSpieler2());
+            savePlayer1Points(calcPoints);
+        } else {
+            int inputValue = Integer.parseInt(player2pts.getText().toString());
+            int calcPoints = inputValue + randomNum;
+            player2pts.setText("" + calcPoints);
+            currentPlayer.setText(getSpieler1());
+            isplayer1 = true;
+            savePlayer2Points(calcPoints);
         }
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                Random rand = new Random();
-                int randomNum = rand.nextInt((6 - 1) + 1) + 1;
-                anzWuerfel.setText(""+randomNum);
-                dice.setImageResource(diceImages[randomNum-1]);
-
-                if(isplayer1){
-                    int inputValue = Integer.parseInt(player1pts.getText().toString());
-                    int calcPoints = inputValue + randomNum;
-                    player1pts.setText(""+calcPoints);
-                    isplayer1 = false;
-                    currentPlayer.setText(getSpieler2());
-                    savePlayer1Points(calcPoints);
-                }
-                else {
-                    int inputValue = Integer.parseInt(player2pts.getText().toString());
-                    int calcPoints = inputValue + randomNum;
-                    player2pts.setText(""+calcPoints);
-                    currentPlayer.setText(getSpieler1());
-                    isplayer1 = true;
-                    savePlayer2Points(calcPoints);
-                }
-                if(counter-1 == anzWuerfelint*2){
-                    Intent change = new Intent(SettingsActivity.this, EndgameActivity.class);
-                    startActivity(change);
-                }
-                try {
-                    // In a try block sleep the thread for a
-                    // smooth animation
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        Thread thread = new Thread(runnable);
-        // Start the thread. This will cause the run() method to be called
-        // where all the dice rolling animation happens.
-        thread.start();
-        // If the MediaPlayer object is not null then start playing
-        // the music.
-        if (mp != null) {
-            mp.start();
-        }
-        thread.join();
-
-
-    }
-
-    public int rollDiceBeta() throws InterruptedException {
-
-
-        counter++;
-        if(counter-1 <= anzWuerfelint*2){
-
-            // Define a Runnable object
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    int diceNr = 0;
-                    // In the run() method, use a for loop to iterate
-                    // some code to show rolling dice animation
-                    for(int i=0; i < rollAnimations; i++){
-
-                        int dice1 = random.nextInt(6) +1;
-                        diceInt = dice1-1;
-                        dice.setImageResource(diceImages[diceInt]);
-
-                        try {
-                            // In a try block sleep the thread for a
-                            // smooth animation
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                }
-            };
-            // Define a Thread object and pass the runnable object
-            // in the constructor.
-            Thread thread = new Thread(runnable);
-            // Start the thread. This will cause the run() method to be called
-            // where all the dice rolling animation happens.
-            thread.start();
-            // If the MediaPlayer object is not null then start playing
-            // the music.
-            if (mp != null) {
-                mp.start();
-            }
-            thread.join();
-            int randomNum = diceInt+1;
-
-            if(isplayer1){
-                int inputValue = Integer.parseInt(player1pts.getText().toString());
-                int calcPoints = inputValue + randomNum;
-                player1pts.setText(""+calcPoints);
-                isplayer1 = false;
-                currentPlayer.setText(getSpieler2());
-                savePlayer1Points(calcPoints);
-            }
-            else {
-                int inputValue = Integer.parseInt(player2pts.getText().toString());
-                int calcPoints = inputValue + randomNum;
-                player2pts.setText(""+calcPoints);
-                currentPlayer.setText(getSpieler1());
-                isplayer1 = true;
-                savePlayer2Points(calcPoints);
-            }
-
-        }
-        else{
+        if (counter - 1 == anzWuerfelint * 2) {
             Intent change = new Intent(SettingsActivity.this, EndgameActivity.class);
             startActivity(change);
         }
-
-        return diceInt;
     }
 
-    public String getSpieler1(){
+
+    public String getSpieler1() {
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         String spieler1 = sharedPreferences.getString("spieler1", null);
         return spieler1;
     }
 
 
-    public String getSpieler2(){
+    public String getSpieler2() {
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         String spieler2 = sharedPreferences.getString("spieler2", null);
         return spieler2;
     }
 
-    public int getInt(){
+    public int getInt() {
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         int anz = sharedPreferences.getInt("int", 0);
         return anz;
     }
 
-    public void savePlayer1Points(int anz){
+    public void savePlayer1Points(int anz) {
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("player1pts", anz);
         editor.apply();
     }
 
-    public void savePlayer2Points(int anz){
+    public void savePlayer2Points(int anz) {
         SharedPreferences sharedPreferences = getSharedPreferences("lernsetSpeicher", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("player2pts", anz);
